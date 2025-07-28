@@ -7,13 +7,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    services:
-      selenium:
-        image: selenium/standalone-chrome
-        ports:
-          - "4444:4444"
-        shm_size: 2gb
-
+    
     steps:
     - uses: actions/checkout@v4
       with:
@@ -31,6 +25,20 @@ jobs:
       with:
         node-version: '20'
     
+    - name: Install Chrome and ChromeDriver
+      run: |
+        # 下载 Chrome for Testing
+        wget https://storage.googleapis.com/chrome-for-testing-public/138.0.7204.168/linux64/chrome-linux64.zip
+        unzip chrome-linux64.zip
+        sudo mv chrome-linux64/chrome /usr/local/bin/google-chrome
+        sudo chmod +x /usr/local/bin/google-chrome
+        
+        # 下载 ChromeDriver
+        wget https://storage.googleapis.com/chrome-for-testing-public/138.0.7204.168/linux64/chromedriver-linux64.zip
+        unzip chromedriver-linux64.zip
+        sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
+        sudo chmod +x /usr/local/bin/chromedriver
+    
     - name: Install dependencies
       run: |
         cd web
@@ -40,6 +48,11 @@ jobs:
         cargo fetch
         cd ..
     
+    - name: Start chromedriver
+      run: |
+        nohup chromedriver --port=4444 > chromedriver.log 2>&1 &
+        echo $! > chromedriver.pid
+
     - name: Update git submodules
       run: |
         git submodule update --init --recursive
