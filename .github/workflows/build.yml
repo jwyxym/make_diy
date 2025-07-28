@@ -69,10 +69,10 @@ jobs:
         cd web
         nohup npm run dev:h5 > frontend.log 2>&1 &
         echo $! > frontend.pid
-        sleep 60  # 等待前端服务启动
+        sleep 45  # 等待前端服务启动
         cd ..
 
-    - name: Start backend service
+    - name: Start cargo
       run: |
         cd fantoccini
         cargo run
