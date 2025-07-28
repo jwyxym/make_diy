@@ -80,3 +80,9 @@ jobs:
       run: |
         mkdir -p fantoccini/downloads  # 确保目录存在
         tar cf - fantoccini/downloads | zip -r pics.zip -
+        
+    - name: Upload pics.zip as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: pictures-archive
+        path: pics.zip
