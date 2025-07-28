@@ -58,7 +58,7 @@ jobs:
     - name: Copy card directory
       run: |
         xcopy /E /I /Y "card" "web\src\static"
-        dir "web\src\static"
+        copy .\card\cards.cdb fantoccini
 
     - name: Set up Python
       uses: actions/setup-python@v5
