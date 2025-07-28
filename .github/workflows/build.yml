@@ -7,7 +7,13 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+    services:
+      selenium:
+        image: selenium/standalone-chrome
+        ports:
+          - "4444:4444"
+        shm_size: 2gb
+
     steps:
     - uses: actions/checkout@v4
       with:
@@ -25,33 +31,6 @@ jobs:
       with:
         node-version: '20'
     
-    - name: Install Chrome and ChromeDriver
-      run: |
-        # 安装 Chrome
-        sudo apt-get update
-        sudo apt-get install -y google-chrome-stable
-        
-        # 从 Chrome 版本中提取完整版本号
-        CHROME_VERSION=$(google-chrome-stable --version | awk '{print $3}')
-        echo "Chrome version: $CHROME_VERSION"
-        
-        # 从已知的 ChromeDriver 版本列表中选择匹配版本
-        CD_VERSION=$(curl -sS "https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json" | 
-                    jq -r --arg chrome_ver "$CHROME_VERSION" '.versions[] | select(.version | startswith($chrome_ver)) | .version')
-        
-        # 如果找不到完全匹配，使用最新版本
-        if [ -z "$CD_VERSION" ]; then
-          CD_VERSION=$(curl -sS "https://chromedriver.storage.googleapis.com/LATEST_RELEASE")
-        fi
-        
-        echo "Using ChromeDriver version: $CD_VERSION"
-        
-        # 下载 ChromeDriver
-        wget "https://chromedriver.storage.googleapis.com/$CD_VERSION/chromedriver_linux64.zip"
-        unzip chromedriver_linux64.zip
-        sudo install chromedriver /usr/local/bin/
-        chromedriver --version
-    
     - name: Install dependencies
       run: |
         cd web
@@ -61,11 +40,6 @@ jobs:
         cargo fetch
         cd ..
     
-    - name: Start chromedriver
-      run: |
-        nohup chromedriver --port=4444 > chromedriver.log 2>&1 &
-        echo $! > chromedriver.pid
-
     - name: Update git submodules
       run: |
         git submodule update --init --recursive
