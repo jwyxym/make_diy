@@ -47,15 +47,6 @@ jobs:
         cd fantoccini
         cargo fetch
         cd ..
-    
-    - name: Start chromedriver
-      run: |
-        Start-Process -FilePath "chromedriver.exe" -ArgumentList "--port=9515" -NoNewWindow -RedirectStandardOutput "chromedriver.log" -PassThru | Select-Object -ExpandProperty Id | Out-File -FilePath "chromedriver.pid"
-        $count = 0
-        while (!(Test-NetConnection -ComputerName localhost -Port 9515).TcpTestSucceeded -and $count -lt 30) {
-          Start-Sleep -Seconds 1
-          $count++
-        }
 
     - name: Update git submodules
       run: |
@@ -73,8 +64,14 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Start frontend service
-      run: |
+    - name: Run
+        Start-Process -FilePath "chromedriver.exe" -ArgumentList "--port=9515" -NoNewWindow -RedirectStandardOutput "chromedriver.log" -PassThru | Select-Object -ExpandProperty Id | Out-File -FilePath "chromedriver.pid"
+        $count = 0
+        while (!(Test-NetConnection -ComputerName localhost -Port 9515).TcpTestSucceeded -and $count -lt 30) {
+          Start-Sleep -Seconds 1
+          $count++
+        }
+
         cd web
         npm run build:h5
         cd dist\build\h5
@@ -85,10 +82,8 @@ jobs:
           $count++
         }
         if ($count -eq 30) { exit 1 }
-        cd ..\..\..
+        cd ..\..\..\..
 
-    - name: Start cargo
-      run: |
         cd fantoccini
         curl -v http://localhost:9515/status
         cargo run
