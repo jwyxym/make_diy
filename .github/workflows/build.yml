@@ -10,7 +10,9 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
-    
+      with:
+        submodules: 'recursive'
+
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
@@ -27,6 +29,7 @@ jobs:
     - name: Install Chrome and ChromeDriver
       uses: nanasess/setup-chromedriver@v1
     
+    - name: Install dependencies
       run: |
         npm install
         cargo fetch
@@ -36,25 +39,29 @@ jobs:
         nohup chromedriver --port=4444 > chromedriver.log 2>&1 &
         echo $! > chromedriver.pid
 
-    - name: git init
+    - name: Update git submodules
       run: |
+        git submodule update --init --recursive
         git submodule foreach git pull origin main
 
-    - name: copy card
+    - name: Copy card directory
       run: |
+        mkdir -p /web/src/static/
         cp -r ~/card /web/src/static/
 
-    - name: Start services
+    - name: Start frontend service
       run: |
         nohup npm run dev:h5 > frontend.log 2>&1 &
         echo $! > frontend.pid
-        sleep 30
+        sleep 30  # 等待前端服务启动
 
-    - name: Start cargo
+    - name: Start backend service
       run: |
         nohup cargo run > backend.log 2>&1 &
         echo $! > backend.pid
+        sleep 10  # 等待后端服务启动
 
-    - name: zip pics
+    - name: Archive pictures
       run: |
-        tar cf - /fantoccini/downloads | zip -r pics.zip -
+        mkdir -p fantoccini/downloads  # 确保目录存在
+        tar cf - fantoccini/downloads | zip -r pics.zip -
