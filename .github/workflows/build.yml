@@ -75,7 +75,7 @@ jobs:
     - name: Start cargo
       run: |
         cd fantoccini
-        cargo run
+        cargo run -- --headless --no-sandbox
 
     - name: Upload pics.zip as artifact
       uses: actions/upload-artifact@v4
