@@ -66,17 +66,21 @@ jobs:
 
     - name: Start frontend service
       run: |
+        cd web
         nohup npm run dev:h5 > frontend.log 2>&1 &
         echo $! > frontend.pid
         sleep 30  # 等待前端服务启动
+        cd ..
 
     - name: Start backend service
       run: |
+        cd fantoccini
         nohup cargo run > backend.log 2>&1 &
         echo $! > backend.pid
         sleep 20  # 等待后端服务启动
-        ls -la ./fantoccini/
-        ls -la ./fantoccini/downloads/
+        ls -la 
+        ls -la ./downloads/
+        cd ..
 
     - name: Upload pics.zip as artifact
       uses: actions/upload-artifact@v4
