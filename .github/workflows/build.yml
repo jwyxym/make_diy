@@ -51,7 +51,7 @@ jobs:
     - name: Start chromedriver
       run: |
         chromedriver --version
-        Start-Process -FilePath "chromedriver.exe" -ArgumentList "--port=9515" -NoNewWindow -RedirectStandardOutput "chromedriver.log" -PassThru | Select-Object -ExpandProperty Id | Out-File -FilePath "chromedriver.pid"
+        chromedriver --port=9515
 
     - name: Update git submodules
       run: |
