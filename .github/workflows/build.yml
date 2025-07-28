@@ -60,6 +60,18 @@ jobs:
         git submodule foreach --recursive 'git reset --hard origin/main'
         git submodule foreach --recursive 'git clean -fd'
 
+    - name: List directory contents
+      run: |
+        echo "Current directory:"
+        pwd
+        ls -la
+        
+        echo "web/src/static directory:"
+        ls -la web/src/static
+        
+        echo "card directory:"
+        ls -la card
+
     - name: Copy card directory
       run: |
         cp -r ~/card /web/src/static/
