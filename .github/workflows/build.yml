@@ -25,17 +25,26 @@ jobs:
       with:
         node-version: '20'
     
-    - name: Install ChromeDriver
+    - name: Install Chrome and ChromeDriver
       run: |
-        # 安装 Chrome
+        # 1. 安装 Chrome
         sudo apt-get update
+        sudo apt-get install -y wget unzip
         sudo apt-get install -y google-chrome-stable
-
-        CHROME_VERSION=$(google-chrome --version | awk '{print $3}')
-        CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION%.*}")
-        wget -N https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip
+        
+        CHROME_VERSION=$(google-chrome-stable --version | awk '{print $3}' | cut -d '.' -f 1)
+        echo "Chrome major version: $CHROME_VERSION"
+        
+        for i in {1..3}; do
+          CHROMEDRIVER_VERSION=$(curl -sS "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION") && break
+          sleep 5
+        done
+        
+        echo "ChromeDriver version: $CHROMEDRIVER_VERSION"
+        wget --tries=3 --retry-connrefused "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip"
+        
         unzip chromedriver_linux64.zip
-        sudo mv chromedriver /usr/local/bin/chromedriver
+        sudo mv chromedriver /usr/local/bin/
         sudo chmod +x /usr/local/bin/chromedriver
         chromedriver --version
     
