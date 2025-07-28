@@ -57,12 +57,7 @@ jobs:
 
     - name: Copy card directory
       run: |
-        xcopy /E /I /Y "card" "web\src\static\card"
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+        xcopy /E /I /Y "card" "web\src\static\"
 
     - name: Run
       run: |
@@ -74,20 +69,21 @@ jobs:
         }
 
         cd web
-        npm run build:h5
-        cd dist\build\h5
-        Start-Process -FilePath "python" -ArgumentList "-m http.server 8000" -NoNewWindow -RedirectStandardOutput "frontend.log" -PassThru | Select-Object -ExpandProperty Id | Out-File -FilePath "..\..\..\frontend.pid"
+        dir src\static\
+        Start-Process -FilePath "npm" -ArgumentList "run dev:h5" -NoNewWindow -RedirectStandardOutput "frontend.log" -PassThru | Select-Object -ExpandProperty Id | Out-File -FilePath "..\..\..\frontend.pid"
         $count = 0
-        while (!(Test-NetConnection -ComputerName localhost -Port 8000).TcpTestSucceeded -and $count -lt 30) {
+        while (!(Test-NetConnection -ComputerName localhost -Port 5173).TcpTestSucceeded -and $count -lt 30) {
           Start-Sleep -Seconds 1
           $count++
         }
         if ($count -eq 30) { exit 1 }
-        cd ..\..\..\..
 
-        cd fantoccini
-        curl -v http://localhost:9515/status
+        cd ..\fantoccini
+        mkdir downloads
         cargo run
+        dir
+        dir downloads
+
 
     - name: Cleanup processes
       if: always()
