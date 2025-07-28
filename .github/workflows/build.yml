@@ -1,0 +1,58 @@
+name: Make
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+    
+    - name: Install Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Install Chrome and ChromeDriver
+      uses: nanasess/setup-chromedriver@v1
+    
+      run: |
+        npm install
+        cargo fetch
+    
+    - name: Start chromedriver
+      run: |
+        nohup chromedriver --port=4444 > chromedriver.log 2>&1 &
+        echo $! > chromedriver.pid
+
+    - name: git init
+      run: |
+        git submodule foreach git pull origin main
+
+    - name: copy card
+      run: |
+        cp -r ~/card /web/src/static/
+
+    - name: Start services
+      run: |
+        nohup npm run dev:h5 > frontend.log 2>&1 &
+        echo $! > frontend.pid
+        sleep 30
+
+    - name: Start cargo
+      run: |
+        nohup cargo run > backend.log 2>&1 &
+        echo $! > backend.pid
+
+    - name: zip pics
+      run: |
+        tar cf - /fantoccini/downloads | zip -r pics.zip -
