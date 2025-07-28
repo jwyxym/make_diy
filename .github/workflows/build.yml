@@ -91,17 +91,14 @@ jobs:
     - name: Cleanup processes
       if: always()
       run: |
-        # 停止 chromedriver
         if (Test-Path "chromedriver.pid") {
           $chromedriverpid = Get-Content "chromedriver.pid"
           Stop-Process -Id $chromedriverpid -Force -ErrorAction SilentlyContinue
         }
-        # 停止前端服务
         if (Test-Path "frontend.pid") {
           $frontendpid = Get-Content "frontend.pid"
           Stop-Process -Id $frontendpid -Force -ErrorAction SilentlyContinue
         }
-        # 停止所有 Chrome 进程
         Get-Process -Name "chrome", "chromedriver" -ErrorAction SilentlyContinue | Stop-Process -Force
 
     - name: Upload pics.zip as artifact
