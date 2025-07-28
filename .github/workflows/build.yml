@@ -86,7 +86,7 @@ jobs:
     - name: Start cargo
       run: |
         cd fantoccini
-        cargo run -- --headless --no-sandbox
+        cargo run
 
     - name: Cleanup processes
       if: always()
