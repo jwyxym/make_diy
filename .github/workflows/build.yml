@@ -118,7 +118,7 @@ jobs:
             dst_cursor = dst_conn.cursor()
 
             # 创建表（如果不存在）
-            dst_cursor.execute("""
+            dst_cursor.execute('''
               CREATE TABLE IF NOT EXISTS texts(
                 id integer primary key,
                 name text,
@@ -140,9 +140,9 @@ jobs:
                 str15 text,
                 str16 text
               )
-            """)
+            ''')
 
-            dst_cursor.execute("""
+            dst_cursor.execute('''
               CREATE TABLE IF NOT EXISTS datas(
                 id integer primary key,
                 ot integer,
@@ -156,7 +156,7 @@ jobs:
                 attribute integer,
                 category integer
               )
-            """)
+            ''')
             dst_conn.commit()
 
             # 插入datas表数据
@@ -179,10 +179,10 @@ jobs:
                 for row in batch
             ]
             dst_cursor.executemany(
-                """INSERT OR REPLACE INTO texts VALUES (
+                '''INSERT OR REPLACE INTO texts VALUES (
                     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                     ?, ?, ?, ?, ?, ?, ?, ?, ?
-                )""",
+                )''',
                 texts_values
             )
             
