@@ -31,15 +31,20 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y google-chrome-stable
         
-        # 获取 Chrome 版本并提取主版本号
+        # 从 Chrome 版本中提取完整版本号
         CHROME_VERSION=$(google-chrome-stable --version | awk '{print $3}')
-        CHROME_MAJOR_VERSION=$(echo $CHROME_VERSION | cut -d '.' -f 1)
         echo "Chrome version: $CHROME_VERSION"
-        echo "Chrome major version: $CHROME_MAJOR_VERSION"
         
-        # 从官方列表获取最新的 ChromeDriver 版本
-        CD_VERSION=$(curl -sS "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_MAJOR_VERSION")
-        echo "ChromeDriver version: $CD_VERSION"
+        # 从已知的 ChromeDriver 版本列表中选择匹配版本
+        CD_VERSION=$(curl -sS "https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json" | 
+                    jq -r --arg chrome_ver "$CHROME_VERSION" '.versions[] | select(.version | startswith($chrome_ver)) | .version')
+        
+        # 如果找不到完全匹配，使用最新版本
+        if [ -z "$CD_VERSION" ]; then
+          CD_VERSION=$(curl -sS "https://chromedriver.storage.googleapis.com/LATEST_RELEASE")
+        fi
+        
+        echo "Using ChromeDriver version: $CD_VERSION"
         
         # 下载 ChromeDriver
         wget "https://chromedriver.storage.googleapis.com/$CD_VERSION/chromedriver_linux64.zip"
