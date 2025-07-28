@@ -86,7 +86,10 @@ jobs:
         if ($count -eq 30) { exit 1 }
         cd ..\..\..\..
         cd fantoccini
-        cargo run
+        cargo build --release
+        copy target\release\fantoccini_client.exe .\
+        cd ..
+        python ci.py
 
     - name: Cleanup processes
       if: always()
