@@ -90,6 +90,7 @@ jobs:
     - name: Start cargo
       run: |
         cd fantoccini
+        curl -v http://localhost:9515/status
         cargo run
 
     - name: Cleanup processes
