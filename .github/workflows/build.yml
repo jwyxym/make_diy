@@ -75,14 +75,7 @@ jobs:
     - name: Start backend service
       run: |
         cd fantoccini
-        nohup cargo run > backend.log 2>&1 &
-        echo $! > backend.pid
-        sleep 20  # 等待后端服务启动
-        cat backend.log
-        ls -la 
-        ls -la ./target/
-        ls -la ./target/debug/
-        cd ..
+        cargo run
 
     - name: Upload pics.zip as artifact
       uses: actions/upload-artifact@v4
