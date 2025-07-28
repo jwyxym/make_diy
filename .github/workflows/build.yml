@@ -13,16 +13,6 @@ jobs:
       with:
         submodules: 'recursive'
 
-    - name: Install SQLite
-      shell: cmd
-      run: |
-        choco install sqlite --version 3.44.2 -y || (
-          echo "Downloading SQLite..."
-          curl -L -o sqlite-tools-win32-x86-3440200.zip https://sqlite.org/2023/sqlite-tools-win32-x86-3440200.zip
-          7z x sqlite-tools-win32-x86-3440200.zip -o"C:\sqlite"
-          setx PATH "%PATH%;C:\sqlite\sqlite-tools-win32-x86-3440200" /M
-        )
-
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
@@ -76,7 +66,6 @@ jobs:
         python-version: '3.11'
 
     - name: Run
-      shell: cmd
       run: |
         Start-Process -FilePath "chromedriver.exe" -ArgumentList "--port=9515" -NoNewWindow -RedirectStandardOutput "chromedriver.log" -PassThru | Select-Object -ExpandProperty Id | Out-File -FilePath "chromedriver.pid"
         $count = 0
@@ -97,96 +86,17 @@ jobs:
         if ($count -eq 30) { exit 1 }
         cd ..\..\..\..
         cd fantoccini
-        @echo off
-          setlocal enabledelayedexpansion
-          
-          :: 设置路径
-          set SRC_DB=..\cards.cdb
-          set DST_DB=..\web\dist\build\h5\cards.cdb
-          set BATCH_SIZE=100
-          
-          :: 创建目标目录
-          if not exist "..\web\dist\build\h5" mkdir "..\web\dist\build\h5"
-          
-          :: 初始化目标数据库
-          if exist "%DST_DB%" del "%DST_DB%"
-          sqlite3 "%DST_DB%" "
-            CREATE TABLE texts(
-              id integer primary key,
-              name text,
-              desc text,
-              str1 text, str2 text, str3 text, str4 text, str5 text,
-              str6 text, str7 text, str8 text, str9 text, str10 text,
-              str11 text, str12 text, str13 text, str14 text, str15 text, str16 text
-            );
-            
-            CREATE TABLE datas(
-              id integer primary key,
-              ot integer, alias integer, setcode integer, type integer,
-              atk integer, def integer, level integer, race integer,
-              attribute integer, category integer
-            );
-          "
-          
-          :: 获取总数据量
-          sqlite3 "%SRC_DB%" "SELECT COUNT(*) FROM datas;" > count.txt
-          set /p TOTAL_COUNT=<count.txt
-          del count.txt
-          
-          :: 计算批次数量
-          set /a BATCH_COUNT=(%TOTAL_COUNT% + %BATCH_SIZE% - 1) / %BATCH_SIZE%
-          
-          :: 分批处理
-          for /L %%i in (0,1,%BATCH_COUNT%) do (
-            set /a OFFSET=%%i * %BATCH_SIZE%
-            
-            echo 处理批次 %%i (偏移量 !OFFSET!)
-            
-            if exist "%DST_DB%" del "%DST_DB%"
-            sqlite3 "%DST_DB%" "
-              CREATE TABLE texts(
-                id integer primary key,
-                name text,
-                desc text,
-                str1 text, str2 text, str3 text, str4 text, str5 text,
-                str6 text, str7 text, str8 text, str9 text, str10 text,
-                str11 text, str12 text, str13 text, str14 text, str15 text, str16 text
-              );
-              
-              CREATE TABLE datas(
-                id integer primary key,
-                ot integer, alias integer, setcode integer, type integer,
-                atk integer, def integer, level integer, race integer,
-                attribute integer, category integer
-              );
-            "
-
-            :: 直接插入数据
-            sqlite3 "%DST_DB%" "
-              INSERT INTO datas
-              SELECT * FROM '%SRC_DB%'.datas
-              ORDER BY id LIMIT %BATCH_SIZE% OFFSET !OFFSET!;
-              
-              INSERT INTO texts
-              SELECT texts.* FROM '%SRC_DB%'.texts
-              JOIN '%SRC_DB%'.datas ON datas.id = texts.id
-              ORDER BY datas.id LIMIT %BATCH_SIZE% OFFSET !OFFSET!;
-            "
-            
-            :: 复制和执行cargo
-            copy /Y "%DST_DB%" .\cards.cdb
-            cargo run
-          )
-        "
-        
+        cargo run
 
     - name: Cleanup processes
       if: always()
       run: |
+        # 停止 chromedriver
         if (Test-Path "chromedriver.pid") {
           $chromedriverpid = Get-Content "chromedriver.pid"
           Stop-Process -Id $chromedriverpid -Force -ErrorAction SilentlyContinue
         }
+        # 停止前端服务
         if (Test-Path "frontend.pid") {
           $frontendpid = Get-Content "frontend.pid"
           Stop-Process -Id $frontendpid -Force -ErrorAction SilentlyContinue
