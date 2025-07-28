@@ -24,15 +24,18 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '20'
-        cache: 'npm'
     
     - name: Install Chrome and ChromeDriver
       uses: nanasess/setup-chromedriver@v1
     
     - name: Install dependencies
       run: |
+        cd web
         npm install
+        cd ..
+        cd fantoccini
         cargo fetch
+        cd ..
     
     - name: Start chromedriver
       run: |
