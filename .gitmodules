@@ -1,0 +1,6 @@
+[submodule "web"]
+	path = web
+	url = https://github.com/jwyxym/diy_web.git
+[submodule "fantoccini"]
+	path = fantoccini
+	url = https://github.com/jwyxym/fantoccini_diy_web.git
