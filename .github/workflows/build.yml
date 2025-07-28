@@ -62,7 +62,6 @@ jobs:
 
     - name: Copy card directory
       run: |
-        mkdir -p /web/src/static/
         cp -r ~/card /web/src/static/
 
     - name: Start frontend service
