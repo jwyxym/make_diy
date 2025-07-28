@@ -64,18 +64,34 @@ jobs:
       run: |
         cp -r ./card ./web/src/static/
 
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
     - name: Start frontend service
       run: |
         cd web
-        nohup npm run dev:h5 > frontend.log 2>&1 &
+        npm run build:h5
+        cd dist
+        cd build
+        cd h5
+        nohup python -m http.server 8000 > frontend.log 2>&1 &
         echo $! > frontend.pid
-        sleep 45  # 等待前端服务启动
+        timeout 30 bash -c 'until nc -z localhost 8000; do sleep 1; done' || exit 1
         cd ..
 
     - name: Start cargo
       run: |
         cd fantoccini
         cargo run -- --headless --no-sandbox
+
+    - name: Cleanup processes
+      if: always()
+      run: |
+        kill $(cat chromedriver.pid) 2>/dev/null || true
+        kill $(cat frontend.pid) 2>/dev/null || true
+        pkill -f "chrome|chromedriver" 2>/dev/null || true
 
     - name: Upload pics.zip as artifact
       uses: actions/upload-artifact@v4
