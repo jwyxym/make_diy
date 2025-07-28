@@ -78,8 +78,8 @@ jobs:
         nohup cargo run > backend.log 2>&1 &
         echo $! > backend.pid
         sleep 20  # 等待后端服务启动
+        cat backend.log
         ls -la 
-        ls -la ./downloads/
         cd ..
 
     - name: Upload pics.zip as artifact
