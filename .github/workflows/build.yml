@@ -1,4 +1,4 @@
-name: Make
+name: Make Windows
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
     
 jobs:
   test:
-    runs-on: ubuntu-22.04
+    runs-on: windows-latest  # 使用 Windows 运行器
     
     steps:
     - uses: actions/checkout@v4
@@ -28,16 +28,16 @@ jobs:
     - name: Install Chrome and ChromeDriver
       run: |
         # 下载 Chrome for Testing
-        wget https://storage.googleapis.com/chrome-for-testing-public/138.0.7204.168/linux64/chrome-linux64.zip
-        unzip chrome-linux64.zip
-        sudo mv chrome-linux64/chrome /usr/local/bin/google-chrome
-        sudo chmod +x /usr/local/bin/google-chrome
+        Invoke-WebRequest -Uri "https://storage.googleapis.com/chrome-for-testing-public/138.0.7204.168/win64/chrome-win64.zip" -OutFile "chrome-win64.zip"
+        Expand-Archive -Path "chrome-win64.zip" -DestinationPath .
+        $chromePath = "$pwd\chrome-win64\chrome.exe"
+        # 将 Chrome 添加到 PATH
+        echo "$pwd\chrome-win64" | Out-File -FilePath $env:GITHUB_PATH -Append
         
         # 下载 ChromeDriver
-        wget https://storage.googleapis.com/chrome-for-testing-public/138.0.7204.168/linux64/chromedriver-linux64.zip
-        unzip chromedriver-linux64.zip
-        sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
-        sudo chmod +x /usr/local/bin/chromedriver
+        Invoke-WebRequest -Uri "https://storage.googleapis.com/chrome-for-testing-public/138.0.7204.168/win64/chromedriver-win64.zip" -OutFile "chromedriver-win64.zip"
+        Expand-Archive -Path "chromedriver-win64.zip" -DestinationPath .
+        echo "$pwd\chromedriver-win64" | Out-File -FilePath $env:GITHUB_PATH -Append
     
     - name: Install dependencies
       run: |
@@ -50,8 +50,7 @@ jobs:
     
     - name: Start chromedriver
       run: |
-        nohup chromedriver --port=4444 > chromedriver.log 2>&1 &
-        echo $! > chromedriver.pid
+        Start-Process -FilePath "chromedriver.exe" -ArgumentList "--port=4444" -NoNewWindow -RedirectStandardOutput "chromedriver.log" -PassThru | Select-Object -ExpandProperty Id | Out-File -FilePath "chromedriver.pid"
 
     - name: Update git submodules
       run: |
@@ -62,7 +61,7 @@ jobs:
 
     - name: Copy card directory
       run: |
-        cp -r ./card ./web/src/static/
+        xcopy /E /I /Y "card" "web\src\static\card"
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -73,13 +72,16 @@ jobs:
       run: |
         cd web
         npm run build:h5
-        cd dist
-        cd build
-        cd h5
-        nohup python -m http.server 8000 > frontend.log 2>&1 &
-        echo $! > frontend.pid
-        timeout 30 bash -c 'until nc -z localhost 8000; do sleep 1; done' || exit 1
-        cd ..
+        cd dist\build\h5
+        Start-Process -FilePath "python" -ArgumentList "-m http.server 8000" -NoNewWindow -RedirectStandardOutput "frontend.log" -PassThru | Select-Object -ExpandProperty Id | Out-File -FilePath "..\..\..\frontend.pid"
+        # 等待端口可用
+        $count = 0
+        while (!(Test-NetConnection -ComputerName localhost -Port 8000).TcpTestSucceeded -and $count -lt 30) {
+          Start-Sleep -Seconds 1
+          $count++
+        }
+        if ($count -eq 30) { exit 1 }
+        cd ..\..\..
 
     - name: Start cargo
       run: |
@@ -89,12 +91,21 @@ jobs:
     - name: Cleanup processes
       if: always()
       run: |
-        kill $(cat chromedriver.pid) 2>/dev/null || true
-        kill $(cat frontend.pid) 2>/dev/null || true
-        pkill -f "chrome|chromedriver" 2>/dev/null || true
+        # 停止 chromedriver
+        if (Test-Path "chromedriver.pid") {
+          $pid = Get-Content "chromedriver.pid"
+          Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+        }
+        # 停止前端服务
+        if (Test-Path "frontend.pid") {
+          $pid = Get-Content "frontend.pid"
+          Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+        }
+        # 停止所有 Chrome 进程
+        Get-Process -Name "chrome", "chromedriver" -ErrorAction SilentlyContinue | Stop-Process -Force
 
     - name: Upload pics.zip as artifact
       uses: actions/upload-artifact@v4
       with:
         name: pictures
-        path: ./fantoccini/downloads/
+        path: .\fantoccini\downloads\
