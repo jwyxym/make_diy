@@ -74,15 +74,10 @@ jobs:
       run: |
         nohup cargo run > backend.log 2>&1 &
         echo $! > backend.pid
-        sleep 10  # 等待后端服务启动
-
-    - name: Archive pictures
-      run: |
-        mkdir -p fantoccini/downloads  # 确保目录存在
-        tar cf - fantoccini/downloads | zip -r pics.zip -
+        sleep 20  # 等待后端服务启动
 
     - name: Upload pics.zip as artifact
       uses: actions/upload-artifact@v4
       with:
-        name: pictures-archive
-        path: pics.zip
+        name: pictures
+        path: fantoccini/downloads/
