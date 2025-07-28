@@ -76,6 +76,7 @@ jobs:
         python-version: '3.11'
 
     - name: Run
+      shell: cmd
       run: |
         Start-Process -FilePath "chromedriver.exe" -ArgumentList "--port=9515" -NoNewWindow -RedirectStandardOutput "chromedriver.log" -PassThru | Select-Object -ExpandProperty Id | Out-File -FilePath "chromedriver.pid"
         $count = 0
