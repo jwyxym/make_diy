@@ -69,7 +69,7 @@ jobs:
         cd web
         nohup npm run dev:h5 > frontend.log 2>&1 &
         echo $! > frontend.pid
-        sleep 30  # 等待前端服务启动
+        sleep 60  # 等待前端服务启动
         cd ..
 
     - name: Start backend service
@@ -80,6 +80,8 @@ jobs:
         sleep 20  # 等待后端服务启动
         cat backend.log
         ls -la 
+        ls -la ./target/
+        ls -la ./target/debug/
         cd ..
 
     - name: Upload pics.zip as artifact
