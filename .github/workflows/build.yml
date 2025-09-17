@@ -55,15 +55,14 @@ jobs:
         git submodule foreach --recursive 'git reset --hard origin/main'
         git submodule foreach --recursive 'git clean -fd'
 
-    - name: Copy card directory
-      run: |
-        xcopy /E /I /Y "card" "web\src\static"
-        copy .\card\cards.cdb fantoccini
-
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: '3.13'
+
+    - name: Copy card directory
+      run: |
+        xcopy /E /I /Y "card" "web\src\static"
 
     - name: Run
       run: |
@@ -85,8 +84,8 @@ jobs:
         }
         if ($count -eq 30) { exit 1 }
         cd ..\..\..\..
-        cd fantoccini
-        cargo run
+        cd .ci
+        python ci.py
 
     - name: Cleanup processes
       if: always()
