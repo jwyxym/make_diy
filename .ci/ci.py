@@ -18,7 +18,7 @@ i = 0
 j = 0
 conn = None
 while True:
-    if j >= 20 or len(rows) < i:
+    if j >= 20 or len(rows) <= i:
         if not conn is None:
             conn.close()
             conn = None
@@ -26,7 +26,7 @@ while True:
         subprocess.run(["cargo", "run"], cwd='../fantoccini')
         shutil.copy2('./cards.cdb', '../fantoccini/cards.cdb')
         j = 0
-    if len(rows) < i:
+    if len(rows) <= i:
         break
 
     if conn is None:
